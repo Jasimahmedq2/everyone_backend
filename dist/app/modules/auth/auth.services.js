@@ -46,7 +46,7 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
                 subject: "verify your email",
                 html: `
       <P>Hello ${payload.name}, please verify your email</p>
-      <a href="http://localhost:3000/verify/${createSecret}/" target="_blank">Click here to verify your email</a>`,
+      <a href="https://main.d1abmpyadvmkqi.amplifyapp.com/verify/${createSecret}/" target="_blank">Click here to verify your email</a>`,
             };
             const result = yield transporter.sendMail(mailOptions);
             throw new apiError_1.default(401, "please check your email to verify your email");
@@ -64,7 +64,7 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
             subject: "verify your email",
             html: `
     <P>Hello ${payload.name}, please verify your email</p>
-    <a href="http://localhost:3000/verify/${createSecret}/" target="_blank">Click here to verify your email</a>`,
+    <a href="https://main.d1abmpyadvmkqi.amplifyapp.com/verify/${createSecret}/" target="_blank">Click here to verify your email</a>`,
         };
         const result = yield transporter.sendMail(mailOptions);
         return result;

@@ -18,6 +18,7 @@ const profileSchema = new mongoose_1.Schema({
     user_name: {
         type: String,
         unique: true,
+        default: "",
     },
     birthday: {
         type: Date,
