@@ -7,4 +7,8 @@ export interface IProfile {
   user_name: string;
   birthday: Date;
   user_name_updated: Date;
+  gender: string;
+  password: string;
+  new_password: string;
+  name: string;
 }

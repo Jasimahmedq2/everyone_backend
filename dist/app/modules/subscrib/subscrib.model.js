@@ -17,10 +17,4 @@ const SubscribSchema = new mongoose_1.Schema({
     subscribed_user: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "user" }],
     paid_users: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "user" }],
 }, { timestamps: true });
-SubscribSchema.pre("save", function (next) {
-    const randomNumber = Math.floor(Math.random() * 1000000);
-    const uniqueSuffix = Date.now();
-    this.subscrib_id = `everyone-${randomNumber}-${uniqueSuffix}`;
-    next();
-});
 exports.Subscribe = (0, mongoose_1.model)("subscrib", SubscribSchema);

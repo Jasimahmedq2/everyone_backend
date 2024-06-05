@@ -1,11 +1,12 @@
 import { Secret } from "jsonwebtoken";
-import config from "../../../config";
 import ApiError from "../../../errors/apiError";
 import { JwtHelpers } from "../../../shared/jwtHelpers";
 import { ILogin, ILoginResponse, IUser } from "./auth.interfaces";
 import { User } from "./auth.models";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
+import config from "../../../config";
+import { profile } from "../profile/profile.model";
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -20,13 +21,11 @@ const createUser = async (payload: IUser) => {
     payload.password,
     Number(config.bcrypt_salt_rounds)
   );
+  console.log({ payload });
 
   const isExistUser = await User.findOne({
     email: payload.email,
-    phone_no: payload.phone_no,
   });
-
-  console.log({ isExistUser });
 
   // if (isExistUser) {
   //   throw new ApiError(401, "user already exist");
@@ -52,12 +51,14 @@ const createUser = async (payload: IUser) => {
       };
       const result = await transporter.sendMail(mailOptions);
 
-      return result;
+      throw new ApiError(401, "please check your email to verify your email");
     } else {
-      throw new ApiError(200, "already you have a account, please login.");
+      throw new ApiError(409, "already you have a account, please login.");
     }
   } else {
-    await User.create(payload);
+    const createUser = await User.create(payload);
+
+    await profile.create({ user: createUser._id });
 
     const mailOptions = {
       from: config.my_email,
@@ -96,7 +97,7 @@ const LogIn = async (payload: ILogin): Promise<ILoginResponse> => {
   );
 
   if (!isPasswordMatched) {
-    throw new ApiError(401, "something went wrong");
+    throw new ApiError(401, "creadential doesn't matched");
   }
 
   const accessToken = await JwtHelpers.createToken(
@@ -107,6 +108,12 @@ const LogIn = async (payload: ILogin): Promise<ILoginResponse> => {
     config.jwt.access_secret as Secret,
     config.jwt.access_expire as string
   );
+
+  console.log({
+    accessToken,
+    accessSecret: config.jwt.access_secret,
+    exipire: config.jwt.access_expire,
+  });
 
   return {
     is_verified: isUserExist.is_verified,

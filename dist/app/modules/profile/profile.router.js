@@ -12,5 +12,6 @@ const multer_1 = __importDefault(require("../../../utils/multer"));
 const router = express_1.default.Router();
 router
     .route("/")
-    .post(multer_1.default.single("file"), (0, auth_1.default)(user_role_1.UserRoles.USER), profile_controller_1.ProfileController.createProfile).get((0, auth_1.default)(user_role_1.UserRoles.USER), profile_controller_1.ProfileController.getProfile);
+    .post(multer_1.default.single("file"), (0, auth_1.default)(user_role_1.UserRoles.USER), profile_controller_1.ProfileController.createProfile)
+    .get((0, auth_1.default)(user_role_1.UserRoles.USER), profile_controller_1.ProfileController.getProfile);
 exports.profileRouter = router;

@@ -18,9 +18,13 @@ const profileSchema = new Schema<IProfile>(
     user_name: {
       type: String,
       unique: true,
+      default: "",
     },
     birthday: {
       type: Date,
+    },
+    gender: {
+      type: String,
     },
     user_name_updated: {
       type: Date,

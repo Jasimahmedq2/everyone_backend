@@ -20,17 +20,18 @@ const createPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, voi
     var _a;
     const { userId } = req.user;
     const location = (_a = req === null || req === void 0 ? void 0 : req.file) === null || _a === void 0 ? void 0 : _a.location;
+    console.log({ location, body: req.body });
     const result = yield post_service_1.PostServices.createPost(userId, location, req.body);
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,
+        data: result,
         message: "the post created",
     });
 }));
 const getFeedAllPost = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.user;
     const result = yield post_service_1.PostServices.getFeedAllPost(userId);
-    console.log({ length: result === null || result === void 0 ? void 0 : result.length });
     (0, sendResponse_1.default)(res, {
         statusCode: 201,
         success: true,

@@ -15,16 +15,36 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProfileService = void 0;
 const profile_model_1 = require("./profile.model");
 const apiError_1 = __importDefault(require("../../../errors/apiError"));
+const auth_models_1 = require("../auth/auth.models");
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const config_1 = __importDefault(require("../../../config"));
 const isWithin7Days = (date1, date2) => {
     const diffTime = Math.abs(Number(date2) - Number(date1));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 7;
 };
 const createProfile = (userId, location, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    payload.image = location;
+    const { name, password, new_password } = payload;
+    if (location) {
+        payload.image = location;
+    }
     const getProfile = yield profile_model_1.profile.findOne({
         user: userId,
     });
+    const checkUser = yield auth_models_1.User.findOne({
+        _id: userId,
+    });
+    // change password
+    if (password && new_password) {
+        const isPasswordMatched = yield bcrypt_1.default.compare(password, checkUser.password);
+        const hashedPass = yield bcrypt_1.default.hash(new_password, Number(config_1.default.bcrypt_salt_rounds));
+        if (isPasswordMatched) {
+            yield auth_models_1.User.findOneAndUpdate({ _id: userId }, { password: hashedPass }, { new: true });
+        }
+    }
+    if (name) {
+        yield auth_models_1.User.findOneAndUpdate({ _id: userId }, { name: name }, { new: true });
+    }
     if (getProfile) {
         if (payload.user_name) {
             if (getProfile.user_name_updated &&

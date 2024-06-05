@@ -19,12 +19,4 @@ const SubscribSchema = new Schema<ISubscrib>(
   },
   { timestamps: true }
 );
-
-SubscribSchema.pre<ISubscrib>("save", function (next) {
-  const randomNumber = Math.floor(Math.random() * 1000000);
-  const uniqueSuffix = Date.now();
-  this.subscrib_id = `everyone-${randomNumber}-${uniqueSuffix}`;
-  next();
-});
-
 export const Subscribe = model<ISubscrib>("subscrib", SubscribSchema);

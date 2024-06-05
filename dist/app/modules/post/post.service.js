@@ -18,6 +18,7 @@ const subscrib_model_1 = require("../subscrib/subscrib.model");
 const post_model_1 = require("./post.model");
 const pull_model_1 = require("./pull.model");
 const apiError_1 = __importDefault(require("../../../errors/apiError"));
+const counter_service_1 = require("../subscrib/counter.service");
 const createPost = (userId, location, payload) => __awaiter(void 0, void 0, void 0, function* () {
     console.log({ payload });
     const session = yield mongoose_1.default.startSession();
@@ -31,8 +32,14 @@ const createPost = (userId, location, payload) => __awaiter(void 0, void 0, void
             access_post: payload === null || payload === void 0 ? void 0 : payload.access_post,
         });
         const result = yield post.save();
-        // subscribe
-        const subscribe = yield subscrib_model_1.Subscribe.create({ post_id: result === null || result === void 0 ? void 0 : result._id });
+        const isBigChannel = (payload === null || payload === void 0 ? void 0 : payload.channel_type) === "bigChannel";
+        const sequenceName = isBigChannel ? "bigChannel" : "normalChannel";
+        const nextId = yield counter_service_1.counterService.getNextSequenceValue(sequenceName);
+        const subscribe = new subscrib_model_1.Subscribe({
+            post_id: result._id,
+            subscrib_id: `everyone-${nextId}`,
+        });
+        yield subscribe.save();
         // create pull
         if (payload.post_type === "pull" && (payload === null || payload === void 0 ? void 0 : payload.pull)) {
             for (let i = 0; i < payload.pull.length; i++) {
@@ -50,6 +57,61 @@ const createPost = (userId, location, payload) => __awaiter(void 0, void 0, void
     }
 });
 const getFeedAllPost = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    // const publicPost = await Post.aggregate([
+    //   {
+    //     $match: {
+    //       post_type: { $in: ["pull", "common"] },
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "pulls",
+    //       localField: "_id",
+    //       foreignField: "post_id",
+    //       as: "pull",
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "user_id",
+    //       foreignField: "_id",
+    //       as: "user",
+    //     },
+    //   },
+    //   {
+    //     $unwind: "$user",
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "profiles",
+    //       localField: "user._id",
+    //       foreignField: "user",
+    //       as: "profile",
+    //     },
+    //   },
+    //   {
+    //     $unwind: "$profile",
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "subscribs",
+    //       localField: "_id",
+    //       foreignField: "post_id",
+    //       as: "subscription",
+    //     },
+    //   },
+    //   {
+    //     $unwind: "$subscription",
+    //   },
+    //   {
+    //     $project: {
+    //       "user.password": 0,
+    //       "user.sensitiveField1": 0,
+    //       "user.sensitiveField2": 0,
+    //     },
+    //   },
+    // ]);
     const publicPost = yield post_model_1.Post.aggregate([
         {
             $match: {
@@ -73,8 +135,55 @@ const getFeedAllPost = (userId) => __awaiter(void 0, void 0, void 0, function* (
             },
         },
         {
+            $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "profiles",
+                localField: "user._id",
+                foreignField: "user",
+                as: "profile",
+            },
+        },
+        {
+            $unwind: {
+                path: "$profile",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: "subscribs",
+                localField: "_id",
+                foreignField: "post_id",
+                as: "subscription",
+            },
+        },
+        {
+            $unwind: {
+                path: "$subscription",
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $sort: { createdAt: -1 },
+        },
+        {
             $project: {
-                "user.password": 0,
+                "user._id": 1,
+                "user.name": 1,
+                "user.email": 1,
+                "profile.image": 1,
+                text: 1,
+                files: 1,
+                pull: 1,
+                post_type: 1,
+                access_post: 1,
+                createdAt: 1,
+                subscription: 1,
             },
         },
     ]);
@@ -146,11 +255,18 @@ const getFeedAllPost = (userId) => __awaiter(void 0, void 0, void 0, function* (
     return publicPost;
 });
 const updatePull = (userId, post_id, pull_id) => __awaiter(void 0, void 0, void 0, function* () {
-    const getPull = yield pull_model_1.pull.findOne({ _id: pull_id, post_id: post_id });
+    const userObjectId = new mongoose_1.default.Types.ObjectId(userId);
+    const postObjectId = new mongoose_1.default.Types.ObjectId(post_id);
+    const pullObjectId = new mongoose_1.default.Types.ObjectId(pull_id);
+    const getPull = yield pull_model_1.pull.findOne({
+        _id: pullObjectId,
+        post_id: postObjectId,
+    });
     if (!getPull) {
         throw new apiError_1.default(404, "pull not found");
     }
-    const result = yield pull_model_1.pull.findOneAndUpdate({ _id: pull_id, post_id: post_id }, { $addToSet: { users: userId } }, { new: true });
+    yield pull_model_1.pull.updateMany({ post_id: postObjectId }, { $pull: { users: userObjectId } });
+    const result = yield pull_model_1.pull.findOneAndUpdate({ _id: pullObjectId, post_id: postObjectId }, { $addToSet: { users: userObjectId } }, { new: true });
     return result;
 });
 exports.PostServices = {

@@ -6,10 +6,13 @@ import { PostServices } from "./post.service";
 const createPost = catchAsync(async (req: Request, res: Response) => {
   const { userId } = (req as any).user;
   const location = (req as any)?.file?.location;
+  console.log({ location, body: req.body });
   const result = await PostServices.createPost(userId, location, req.body);
+
   sendResponse(res, {
     statusCode: 201,
     success: true,
+    data: result,
     message: "the post created",
   });
 });
@@ -17,7 +20,6 @@ const createPost = catchAsync(async (req: Request, res: Response) => {
 const getFeedAllPost = catchAsync(async (req: Request, res: Response) => {
   const { userId } = (req as any).user;
   const result = await PostServices.getFeedAllPost(userId);
-  console.log({ length: result?.length });
   sendResponse(res, {
     statusCode: 201,
     success: true,

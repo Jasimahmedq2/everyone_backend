@@ -22,6 +22,9 @@ const profileSchema = new mongoose_1.Schema({
     birthday: {
         type: Date,
     },
+    gender: {
+        type: String,
+    },
     user_name_updated: {
         type: Date,
     },

@@ -14,7 +14,5 @@ router
     .route("/")
     .post((0, auth_1.default)("user"), multer_1.default.single("file"), post_controller_1.PostController.createPost)
     .get((0, auth_1.default)(user_role_1.UserRoles.USER), post_controller_1.PostController.getFeedAllPost);
-router
-    .route("/pull")
-    .patch((0, auth_1.default)(user_role_1.UserRoles.USER), post_controller_1.PostController.updatePull);
+router.route("/pull").post((0, auth_1.default)(user_role_1.UserRoles.USER), post_controller_1.PostController.updatePull);
 exports.postRoutes = router;

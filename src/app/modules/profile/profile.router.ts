@@ -11,6 +11,8 @@ router
     upload.single("file"),
     auth(UserRoles.USER),
     ProfileController.createProfile
-  ).get(auth(UserRoles.USER), ProfileController.getProfile)
+  )
+  .get(auth(UserRoles.USER), ProfileController.getProfile);
+
 
 export const profileRouter = router;

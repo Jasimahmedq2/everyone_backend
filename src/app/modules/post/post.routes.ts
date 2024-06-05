@@ -11,8 +11,6 @@ router
   .post(auth("user"), upload.single("file"), PostController.createPost)
   .get(auth(UserRoles.USER), PostController.getFeedAllPost);
 
-router
-  .route("/pull")
-  .patch(auth(UserRoles.USER), PostController.updatePull);
+router.route("/pull").post(auth(UserRoles.USER), PostController.updatePull);
 
 export const postRoutes = router;

@@ -13,12 +13,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthUserServices = void 0;
-const config_1 = __importDefault(require("../../../config"));
 const apiError_1 = __importDefault(require("../../../errors/apiError"));
 const jwtHelpers_1 = require("../../../shared/jwtHelpers");
 const auth_models_1 = require("./auth.models");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const config_1 = __importDefault(require("../../../config"));
+const profile_model_1 = require("../profile/profile.model");
 const transporter = nodemailer_1.default.createTransport({
     service: "gmail",
     auth: {
@@ -28,11 +29,10 @@ const transporter = nodemailer_1.default.createTransport({
 });
 const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     payload.password = yield bcrypt_1.default.hash(payload.password, Number(config_1.default.bcrypt_salt_rounds));
+    console.log({ payload });
     const isExistUser = yield auth_models_1.User.findOne({
         email: payload.email,
-        phone_no: payload.phone_no,
     });
-    console.log({ isExistUser });
     // if (isExistUser) {
     //   throw new ApiError(401, "user already exist");
     // }
@@ -49,14 +49,15 @@ const createUser = (payload) => __awaiter(void 0, void 0, void 0, function* () {
       <a href="http://localhost:3000/verify/${createSecret}/" target="_blank">Click here to verify your email</a>`,
             };
             const result = yield transporter.sendMail(mailOptions);
-            return result;
+            throw new apiError_1.default(401, "please check your email to verify your email");
         }
         else {
-            throw new apiError_1.default(200, "already you have a account, please login.");
+            throw new apiError_1.default(409, "already you have a account, please login.");
         }
     }
     else {
-        yield auth_models_1.User.create(payload);
+        const createUser = yield auth_models_1.User.create(payload);
+        yield profile_model_1.profile.create({ user: createUser._id });
         const mailOptions = {
             from: config_1.default.my_email,
             to: payload.email,
@@ -83,12 +84,17 @@ const LogIn = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     }
     const isPasswordMatched = yield bcrypt_1.default.compare(payload.password, isUserExist.password);
     if (!isPasswordMatched) {
-        throw new apiError_1.default(401, "something went wrong");
+        throw new apiError_1.default(401, "creadential doesn't matched");
     }
     const accessToken = yield jwtHelpers_1.JwtHelpers.createToken({
         userId: isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist._id,
         role: isUserExist === null || isUserExist === void 0 ? void 0 : isUserExist.role,
     }, config_1.default.jwt.access_secret, config_1.default.jwt.access_expire);
+    console.log({
+        accessToken,
+        accessSecret: config_1.default.jwt.access_secret,
+        exipire: config_1.default.jwt.access_expire,
+    });
     return {
         is_verified: isUserExist.is_verified,
         userId: isUserExist._id.toString(),
