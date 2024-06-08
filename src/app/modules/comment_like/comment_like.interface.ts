@@ -4,7 +4,9 @@ export interface IComment {
   post_id: Types.ObjectId;
   user_id: Types.ObjectId;
   text?: string;
-  file?: string;
+  files?: string[];
+  sub_comments?: Types.ObjectId[];
+  likes?: Types.ObjectId[];
 }
 
 export interface ILike {

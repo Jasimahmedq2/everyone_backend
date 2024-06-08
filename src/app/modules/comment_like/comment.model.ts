@@ -6,7 +6,9 @@ const CommentSchema = new Schema<IComment>(
     post_id: { type: Schema.Types.ObjectId, ref: "post", required: true },
     user_id: { type: Schema.Types.ObjectId, ref: "user", required: true },
     text: { type: String, default: "" },
-    file: { type: String, default: "" },
+    files: [{ type: String, default: "" }],
+    likes: [{ type: Schema.Types.ObjectId, ref: "user" }],
+    sub_comments: [{ type: Schema.Types.ObjectId, ref: "comment" }],
   },
   { timestamps: true }
 );
